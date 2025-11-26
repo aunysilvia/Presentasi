@@ -1,44 +1,68 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Alat;
+use App\Models\KategoriAlat;
 use Illuminate\Http\Request;
 
 class AlatController extends Controller
 {
     public function index()
     {
-        return Alat::with('jenis')->get();
+        $alat = Alat::with('kategori')->get();
+
+        return view('alat.index', compact('alat'));
+    }
+
+    public function create()
+    {
+        $kategori = KategoriAlat::all();
+
+        return view('alat.create', compact('kategori'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'nama_alat' => 'required|string|max:255',
-            'stok'      => 'required|integer',
-            'satuan'    => 'required|string',
-            'jenis_id'  => 'required|exists:jenis_alat,id',
+            'nama_alat'   => 'required|string|max:255',
+            'stok'        => 'required|integer',
+            'kategori_id' => 'required',
         ]);
 
-        return Alat::create($request->all());
+        Alat::create($request->all());
+
+        return redirect()->route('alat.index')->with('success', 'Alat berhasil ditambahkan!');
     }
 
-    public function show($id)
+    public function show(Alat $alat)
     {
-        return Alat::with('jenis')->findOrFail($id);
+        return view('alat.show', compact('alat'));
     }
 
-    public function update(Request $request, $id)
+    public function edit(Alat $alat)
     {
-        $alat = Alat::findOrFail($id);
+        $kategori = KategoriAlat::all();
+
+        return view('alat.edit', compact('alat', 'kategori'));
+    }
+
+    public function update(Request $request, Alat $alat)
+    {
+        $request->validate([
+            'nama_alat'   => 'required|string|max:255',
+            'stok'        => 'required|integer',
+            'kategori_id' => 'required',
+        ]);
+
         $alat->update($request->all());
-        return $alat;
+
+        return redirect()->route('alat.index')->with('success', 'Alat berhasil diperbarui!');
     }
 
-    public function destroy($id)
+    public function destroy(Alat $alat)
     {
-        Alat::destroy($id);
-        return response()->json(['message' => 'Deleted']);
+        $alat->delete();
+
+        return redirect()->route('alat.index')->with('success', 'Alat berhasil dihapus!');
     }
 }
